@@ -6,7 +6,7 @@ data{
   int<lower=1> n_subj;  // How many participants are we fitting?
   int<lower=0, upper=75> round_in_block[dat_len, n_subj];
   int<lower=1, upper=3> hold[dat_len, n_subj]; // The Portfolio
-  matrix<lower=0>[dat_len, n_subj] current_price; // The price in this round
+  int<lower=0> current_price[dat_len, n_subj]; // The price in this round
   matrix<lower=0, upper=1>[dat_len, n_subj] bayes_probs; // The objective bayesian probability
 }
 // TODO: (1) Add EU evaluation and softmax
@@ -20,28 +20,41 @@ parameters{
 
 
 model{
-  // vector<lower=0>[3] prices_if_increase;
-  // vector<lower=0>[3] prices_if_decrease;
+  // TODO: (3) Set priors!
+
+  vector[3] util_if_increase;
+  vector[3] util_if_decrease;
+  real value_invested;
   vector[3] portf_probs;
 
   for (i_subj in 1:n_subj) {
 
-    // TODO: (1) Make it run each step of the way for debugging!
-    // TODO: (1) Calculate the value of each possible portfolio
-    // TODO: (9) See what's vectorizable here
+    // TODO: (4) Maybe I can vectorize over participants instead of rounds?
     for (i_round in 1:dat_len){
-      // prices_if_increase = [price[i_round, i_subj] + 5,
-      //                       price[i_round, i_subj] + 10,
-      //                       price[i_round, i_subj] + 15];
-      // prices_if_descrease = [price[i_round, i_subj] - 5,
-      //                       price[i_round, i_subj] - 10,
-      //                       price[i_round, i_subj] - 15];
+
+      util_if_increase[1] = (current_price[i_round, i_subj] +
+        5) ^ beta_risk[i_subj];
+      util_if_increase[2] = (current_price[i_round, i_subj] +
+        10) ^ beta_risk[i_subj];
+      util_if_increase[3] = (current_price[i_round, i_subj] +
+        15) ^ beta_risk[i_subj];
+      util_if_decrease[1] = (current_price[i_round, i_subj] -
+        5) ^ beta_risk[i_subj];
+      util_if_decrease[2] = (current_price[i_round, i_subj] -
+        10) ^ beta_risk[i_subj];
+      util_if_decrease[3] = (current_price[i_round, i_subj] -
+        15) ^ beta_risk[i_subj];
+
+      value_invested = sum(
+        util_if_increase * bayes_probs[i_round, i_subj]);
+      // TODO: (1) Continue here by adding the values weighted by probs
+
       portf_probs = [1 - bayes_probs[i_round, i_subj],
                     .5,
                     bayes_probs[i_round, i_subj]]';
 
       target += categorical_lpmf(hold[i_round, i_subj] |
-        softmax(portf_probs));
+        softmax(portf_probs * theta[i_subj])); // TODO: (1) rm theta
       // TODO: (9) Check why categorical_lupmf does not work. Version issue?
       // TODO: (5) Use the "bugfixed" softmax
     }

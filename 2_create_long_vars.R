@@ -21,7 +21,8 @@ count_n_moves <- function(moves, invested) {
   n_moves_vec <- vector(mode = 'numeric', length = length(moves))
   n_moves_now <- 0
   for (i in seq_along(moves)) {
-    if (is.na(moves[i]) | is.na(invested[i])) {  # Guard against NAs
+    if (moves[i] == 'Undefined' | is.na(moves[i])
+      | is.na(invested[i])) {  # Guard against NAs
       n_moves_vec[i] <- NA
       n_moves_now <- 0
       next
@@ -68,7 +69,8 @@ dat_main_long <- dat_main_long %>%
     case_when(hold == -1 & price_diff_from_last < 0 ~ 'Favorable',
       hold == -1 & price_diff_from_last > 0 ~ 'Unfavorable',
       hold != -1 & price_diff_from_last < 0 ~ 'Unfavorable',
-      hold != -1 & price_diff_from_last > 0 ~ 'Favorable')),
+      hold != -1 & price_diff_from_last > 0 ~ 'Favorable',
+      TRUE ~ 'Undefined')),
    position = case_when(
       hold != 0 & returns > 0 ~ 'Gain',
       hold != 0 & returns < 0 ~ 'Loss',
@@ -87,6 +89,9 @@ dat_main_long <- dat_main_long %>%
     price_diff_from_last > 0,
     belief_diff_bayes_corrected, - belief_diff_bayes_corrected)
   )
+
+  dat_main_long$hold_lead <- lead(dat_main_long$hold)
+  dat_main_long$hold_lead[dat_main_long$i_round_in_block == 75] <- NA
 
 # "Optimal Trading" -----------------------------------------------------------
 dat_main_long$rational_hold <- if_else(

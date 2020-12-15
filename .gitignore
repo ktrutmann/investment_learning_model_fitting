@@ -1,3 +1,7 @@
+/saved_objects/
 *.sublime-workspace
 *.RData
 *.RDS
+*.Rhistory
+/models/dimitris_model.stan
+/models/laura_model.stan

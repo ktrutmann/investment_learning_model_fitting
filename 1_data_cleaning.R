@@ -7,8 +7,8 @@ library(tidyverse)
 
 
 study_stage <- 'param_recovery'  # With what part of the study are we dealing here?
-raw_dat_path <- file.path('..', 'data', 'raw', 'param_recovery')
-clean_dat_path <- file.path('..', 'data', 'clean', 'param_recovery')
+raw_dat_path <- file.path('..', 'data', 'raw')
+clean_dat_path <- file.path('..', 'data', 'clean')
 
 all_dat <- vroom(file.path(raw_dat_path, list.files(raw_dat_path)))
 
@@ -28,6 +28,11 @@ inv_task_dat_long <- dat_main %>%
     names_to = c("round_number", ".value"),
     names_sep = "\\.")
 
+# "Filling up" the last round:
+inv_task_dat_long$i_round_in_block <- replace_na(inv_task_dat_long$i_round_in_block, 75)
+inv_task_dat_long$hold[inv_task_dat_long$i_round_in_block == 75] <-
+with(inv_task_dat_long,
+  hold[i_round_in_block == 74] + transaction[i_round_in_block == 74])
 
 # Adding the other variables -----------------------------------------------
 other_dat <- all_dat %>%
