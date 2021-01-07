@@ -16,11 +16,11 @@ The `bayes_updater`and `multi_alpha_rl` stan files are used to fit only on the r
 Especially the latter is needed for the MLA_Exp project where the parameters that are simulated are drawn from its posterior.
 The learning rates are coded as follows:
 
-- `alpha`: The base learning rate
-- `rl_beta[1]`: The difference to the base learning rate when seeing an advantageous move while in a gain position
-- `rl_beta[2]`: The difference to the base learning rate when seeing a disadvantageous move while in a gain position
-- `rl_beta[3]`: The difference to the base learning rate when seeing a advantageous move while in a loss position
-- `rl_beta[4]`: The difference to the base learning rate when seeing a disadvantageous move while in a loss position
+- `alphas[1]`: The base learning rate
+- `alphas[2]`: The difference to the base learning rate when seeing an advantageous move while in a gain position
+- `alphas[3]`: The difference to the base learning rate when seeing a disadvantageous move while in a gain position
+- `alphas[4]`: The difference to the base learning rate when seeing a advantageous move while in a loss position
+- `alphas[5]`: The difference to the base learning rate when seeing a disadvantageous move while in a loss position
 - `sigma`: The variance of the reporting error before standardizing the belief.
 
 The priors and hyperpriors were declared as in @Fontanesi19.

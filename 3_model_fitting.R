@@ -1,11 +1,11 @@
-	library(rstan)
-	library(tidyverse)
+library(rstan)
+library(tidyverse)
 
 options(mc.cores = parallel::detectCores())
 Sys.setenv(LOCAL_CPPFLAGS = '-march=corei7 -mtune=corei7')
 
-dat_main_long <- read_delim(file.path('..', 'data', 'input',
-	'all_participants_long_main_param_recovery.csv'), delim = ';')
+dat_main_long <- read_delim(file.path('..', 'data', 'clean',
+	'all_participants_long_main_main_study.csv'), delim = ';')
 
 
 # Helper functions -----------------------------------------------
@@ -27,10 +27,8 @@ make_stan_matrix <- function(df, content_var) {
 }
 
 # Getting Data ready --------------------------------------------------------
-# Starting with only one participant and two blocks for testing purposes
 fit_dat <- filter(dat_main_long,
-	i_block <= 1, i_round_in_block != 75,
-	participant_code %in% unique(participant_code)[1:10])
+	i_block <= 1, i_round_in_block != 75)
 
 # Data for Stan (names must correspond to that in .stan file):
 # Note: + 0 is used to convert the boolean to integer matrix
@@ -48,14 +46,14 @@ stan_dat <- list(
 	current_price = (make_stan_matrix(fit_dat, 'price')),
 	bayes_probs = make_stan_matrix(fit_dat, 'bayes_prob_up')
 )
-
+	
 # Fitting ----------------------------------------------------
-fit_bayesian_updater <- stan(
+fitted_model <- stan(
 	file = file.path('models', 'multi_alpha_rl.stan'),
 	data = stan_dat,
 	iter = 12000,
 	warmup = 2000,
-	chains = 1,
+	chains = 4,
 	cores = 4)
 
-saveRDS(fit_bayesian_updater, file.path('saved_objects', 'fit_bayesian_updater.RDS'))
+saveRDS(fitted_model, file.path('..', 'saved_objects', 'rl_plus_main_study.RDS'))

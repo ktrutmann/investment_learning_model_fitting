@@ -4,15 +4,19 @@ library(shinystan)
 library(bayesplot)
 library(tidybayes)
 
+fitted_model <- readRDS(file.path('saved_objects', 'rl_plus_main_study.RDS'))
+
 # Plot Diagnostics -----------------------------------------------
 
+pairs(fitted_model, pars = names(fitted_model@sim$samples[[1]])[c(1,2,6,7,11,12, 36, 37, 38)])
 
-bayes_ev_trace <- rstan::extract(fit_bayesian_updater,
+model_trace <- rstan::extract(fitted_model,
 	inc_warmup = TRUE, permuted = FALSE)
 
-mcmc_dens(bayes_ev_trace, pars = vars(-contains('log_lik')))
+mcmc_dens(model_trace, pars = vars(contains('transf_hyper_alpha')))
 
-
+qplot(model_trace[, , 'transf_hyper_alpha[3]'] -
+	model_trace[, , 'transf_hyper_alpha[1]'])
 
 # LOO evaluation ----------------------------------------------------
 log_lik_bayes_updater <- extract_log_lik(fit_bayesian_updater,
