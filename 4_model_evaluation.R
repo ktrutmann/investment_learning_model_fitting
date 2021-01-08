@@ -4,20 +4,37 @@ library(shinystan)
 library(bayesplot)
 library(tidybayes)
 
-fitted_model <- readRDS(file.path('saved_objects', 'rl_plus_main_study.RDS'))
+theme_set(theme_minimal())
+
+fitted_model <- readRDS(
+	file.path('..','saved_objects', 'rl_plus_main_study.RDS'))
 
 # Plot Diagnostics -----------------------------------------------
 
 pairs(fitted_model, pars = names(fitted_model@sim$samples[[1]])[c(1,2,6,7,11,12, 36, 37, 38)])
 
-model_trace <- rstan::extract(fitted_model,
-	inc_warmup = TRUE, permuted = FALSE)
+model_traces <- rstan::extract(fitted_model,
+	pars = str_c('transf_hyper_alpha[', 1:5, ']'),
+	permuted = TRUE, inc_warmup = FALSE) %>%
+	as_tibble()
 
-mcmc_dens(model_trace, pars = vars(contains('transf_hyper_alpha')))
+model_traces %>%
+	pivot_longer(cols = everything()) %>%
+	mutate(alpha = factor(name,
+		levels = str_c('transf_hyper_alpha[', 1:5, ']'),
+		labels = c('Not Inv', 'Fav Gain', 'Unfav Gain',
+			'Fav Loss', 'Unfav Loss'))) %>%
+	ggplot(aes(value)) +
+	geom_histogram() +
+	facet_wrap(facets = vars(alpha),
+		scales = 'free_y')
 
-qplot(model_trace[, , 'transf_hyper_alpha[3]'] -
-	model_trace[, , 'transf_hyper_alpha[1]'])
+X11()
 
+model_traces %>%
+	mutate(alpha_diff = `transf_hyper_alpha[3]` - `transf_hyper_alpha[2]`) %>%
+	ggplot(aes(alpha_diff)) +
+	geom_histogram()
 # LOO evaluation ----------------------------------------------------
 log_lik_bayes_updater <- extract_log_lik(fit_bayesian_updater,
 	merge_chains = FALSE)
