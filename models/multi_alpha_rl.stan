@@ -45,26 +45,21 @@ parameters{
 
 
 transformed parameters{
-  // TODO: (3) Maybe redefine as array of vectors for efficiency?
   matrix [n_subj, 5] alphas;
   vector [n_subj] sigma;
-  vector [5] transf_hyper_alpha;
   // Non-centered parameterisation
   for (i in 1:5){
     alphas[:, i] = Phi(hyper_alphas[i] + hyper_alpha_sds[i] * alphas_raw[:, i]);
   }
   sigma = hyper_sigma + hyper_sigma_sd * sigmas_raw;
-
-  transf_hyper_alpha = Phi(hyper_alphas); // For easier interpretation of the output
 }
 
 model{
   // Priors following Fontanesi19
-  // TODO: (2) Change parameters to be sensible in inv_Phi space
 
   // Hyperpriors
   for (i in 1:5){
-    hyper_alphas[i] ~ normal(.3, .3);
+    hyper_alphas[i] ~ normal(-.5, .5);
     hyper_alpha_sds[i] ~ gamma(1.2, 3);
   }
 
@@ -78,7 +73,7 @@ model{
     for (i in 1:5){
       alphas_raw[i_subj, :] ~ std_normal();
     }
-    sigmas_raw ~ std_normal();
+    sigmas_raw[i_subj] ~ std_normal();
 
     for (i_trial in 1:dat_len) {
       if (round_in_block[i_trial, i_subj] == 0) {

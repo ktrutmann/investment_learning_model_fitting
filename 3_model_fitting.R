@@ -1,5 +1,6 @@
 library(rstan)
 library(tidyverse)
+source('notifier.R')
 
 options(mc.cores = parallel::detectCores())
 Sys.setenv(LOCAL_CPPFLAGS = '-march=corei7 -mtune=corei7')
@@ -43,12 +44,16 @@ stan_dat <- list(
 	loss_position = (make_stan_matrix(fit_dat, 'returns') < 0) + 0,
 	favorable_move = (make_stan_matrix(fit_dat,
 		'price_move_from_last_corrected') == 'Favorable') + 0,
+	up_move = (make_stan_matrix(fit_dat,
+		'price_diff_from_last') > 0) + 0,
 	current_price = (make_stan_matrix(fit_dat, 'price')),
 	bayes_probs = make_stan_matrix(fit_dat, 'bayes_prob_up')
 )
-	
+
+stan_dat$up_move[1, 1] <- 0
+
 # Fitting ----------------------------------------------------
-fitted_model <- stan(
+fitted_model_rl_plus <- stan(
 	file = file.path('models', 'multi_alpha_rl.stan'),
 	data = stan_dat,
 	iter = 12000,
@@ -56,4 +61,18 @@ fitted_model <- stan(
 	chains = 4,
 	cores = 4)
 
-saveRDS(fitted_model, file.path('..', 'saved_objects', 'rl_plus_main_study.RDS'))
+saveRDS(fitted_model_rl_plus, file.path('..', 'saved_objects', 'rl_plus_main_study.RDS'))
+
+notify_me('RL Plus')
+
+fitted_model_rl_single <- stan(
+	file = file.path('models', 'single_alpha_rl.stan'),
+	data = stan_dat,
+	iter = 12000,
+	warmup = 2000,
+	chains = 4,
+	cores = 4)
+
+saveRDS(fitted_model_rl_single, file.path('..', 'saved_objects', 'rl_single_main_study.RDS'))
+
+notify_me('RL Single')
