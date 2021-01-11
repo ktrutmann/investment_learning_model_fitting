@@ -1,21 +1,22 @@
 functions{
   real update_model_belief(real prev_belief, int invested, int gain_pos,
-                      int loss_pos, int favorable_move, row_vector alphas) {
+                      int loss_pos, int favorable_move, int up_move,
+                      row_vector alphas) {
 
     if (gain_pos && favorable_move) {
-      return prev_belief + alphas[2] * (favorable_move - prev_belief);
+      return prev_belief + alphas[2] * (up_move - prev_belief);
 
     } else if (gain_pos && !favorable_move) {
-      return prev_belief + alphas[3] * (favorable_move - prev_belief);
+      return prev_belief + alphas[3] * (up_move - prev_belief);
 
     } else if (loss_pos && favorable_move) {
-      return prev_belief + alphas[4] * (favorable_move - prev_belief);
+      return prev_belief + alphas[4] * (up_move - prev_belief);
 
     } else if (loss_pos && !favorable_move) {
-      return prev_belief + alphas[5] * (favorable_move - prev_belief);
+      return prev_belief + alphas[5] * (up_move - prev_belief);
 
     } else {
-      return prev_belief + alphas[1] * (favorable_move - prev_belief);
+      return prev_belief + alphas[1] * (up_move - prev_belief);
     }
   }
 }
@@ -29,6 +30,7 @@ data{
   int<lower=0, upper=1> invested[dat_len, n_subj]; // Invest or short?
   int<lower=0, upper=1> gain_position[dat_len, n_subj];
   int<lower=0, upper=1> loss_position[dat_len, n_subj];
+  int<lower=0, upper=1> up_move[dat_len, n_subj];
   int<lower=0, upper=1> favorable_move[dat_len, n_subj];
 }
 
@@ -86,6 +88,7 @@ model{
           gain_position[i_trial, i_subj],
           loss_position[i_trial, i_subj],
           favorable_move[i_trial, i_subj],
+          up_move[i_trial, i_subj],
           alphas[i_subj, :]);
       }
     // TODO: (5) Put the model loop into the transformed params. section?
