@@ -92,7 +92,12 @@ model{
           alphas[i_subj, :]);
       }
       // TODO: (5) Put the model loop into the transformed params. section?
+      // Normal truncated by [0, 1]
       belief[i_trial, i_subj] ~ normal(model_belief, sigma[i_subj]) T[0, 1];
+      target += normal_lpdf(belief[i_trial, i_subj] |
+        model_belief, sigma[i_subj]) -
+        log_diff_exp(normal_lcdf(1 | model_belief, sigma[i_subj]),
+                            normal_lcdf(0 | model_belief, sigma[i_subj]));
     }
   }
 }

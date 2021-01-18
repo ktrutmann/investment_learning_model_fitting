@@ -8,7 +8,6 @@ Sys.setenv(LOCAL_CPPFLAGS = '-march=corei7 -mtune=corei7')
 dat_main_long <- read_delim(file.path('..', 'data', 'clean',
 	'all_participants_long_main_param_recovery.csv'), delim = ';')
 
-
 # Helper functions -----------------------------------------------
 
 #' This creates a matrix with one row per period and one column per subject.
@@ -61,7 +60,7 @@ fitted_model_rl_plus <- stan(
 	chains = 4,
 	cores = 4)
 
-saveRDS(derp, file.path('..', 'saved_objects',
+saveRDS(fitted_model_rl_plus, file.path('..', 'saved_objects',
 	str_c(format(Sys.time(), "%y%m%d"), '_rl_plus_param_recov.RDS')))
 
 notify_me('Param Recov')
