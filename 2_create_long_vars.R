@@ -4,11 +4,11 @@
 
 # Loading Data: ################################################################
 
-study_stage <- 'main_study'  # With what part of the study are we dealing here?
-clean_dat_path <- file.path('..', 'Data', 'Clean')
+study_stage <- 'param_recovery'  # With what part of the study are we dealing here?
+clean_dat_path <- file.path('..', 'data', 'clean')
 
 dat_main_long <- read_delim(file.path(clean_dat_path,
-  str_c('all_participants_long_main_', study_stage, '_cleaned.csv')),
+  str_c('all_participants_long_main_', study_stage, '.csv')),
 delim = ';')
 
 

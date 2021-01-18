@@ -3,16 +3,16 @@ functions{
                       int loss_pos, int favorable_move, int up_move,
                       row_vector alphas) {
 
-    if (gain_pos && favorable_move) {
+    if ((gain_pos == 1) && (favorable_move == 1)) {
       return prev_belief + alphas[2] * (up_move - prev_belief);
 
-    } else if (gain_pos && !favorable_move) {
+    } else if ((gain_pos == 1) && (favorable_move == 0)) {
       return prev_belief + alphas[3] * (up_move - prev_belief);
 
-    } else if (loss_pos && favorable_move) {
+    } else if ((loss_pos == 1) && (favorable_move == 1)) {
       return prev_belief + alphas[4] * (up_move - prev_belief);
 
-    } else if (loss_pos && !favorable_move) {
+    } else if ((loss_pos == 1) && (favorable_move == 0)) {
       return prev_belief + alphas[5] * (up_move - prev_belief);
 
     } else {
@@ -57,8 +57,9 @@ transformed parameters{
 }
 
 model{
-  // Priors following Fontanesi19
+  real model_belief;
 
+  // Priors following Fontanesi19
   // Hyperpriors
   for (i in 1:5){
     hyper_alphas[i] ~ normal(-.5, .5);
@@ -68,9 +69,8 @@ model{
   hyper_sigma ~ gamma(1.2, 3);
   hyper_sigma_sd ~ gamma(1.2, 3);
 
+  
   for (i_subj in 1:n_subj){
-    real model_belief;
-
     // individual priors
     for (i in 1:5){
       alphas_raw[i_subj, :] ~ std_normal();
@@ -91,8 +91,8 @@ model{
           up_move[i_trial, i_subj],
           alphas[i_subj, :]);
       }
-    // TODO: (5) Put the model loop into the transformed params. section?
-    belief[i_trial, i_subj] ~ normal(model_belief, sigma[i_subj]) T[0, 1];
+      // TODO: (5) Put the model loop into the transformed params. section?
+      belief[i_trial, i_subj] ~ normal(model_belief, sigma[i_subj]) T[0, 1];
     }
   }
 }
