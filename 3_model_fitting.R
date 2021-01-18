@@ -6,7 +6,7 @@ options(mc.cores = parallel::detectCores())
 Sys.setenv(LOCAL_CPPFLAGS = '-march=corei7 -mtune=corei7')
 
 dat_main_long <- read_delim(file.path('..', 'data', 'clean',
-	'all_participants_long_main_param_recovery.csv'), delim = ';')
+	'all_participants_long_main_main_study.csv'), delim = ';')
 
 # Helper functions -----------------------------------------------
 
@@ -55,12 +55,27 @@ stan_dat$up_move[1, 1] <- 0
 fitted_model_rl_plus <- stan(
 	file = file.path('models', 'multi_alpha_rl.stan'),
 	data = stan_dat,
-	iter = 12000,
+	iter = 20000,
 	warmup = 2000,
 	chains = 4,
 	cores = 4)
 
 saveRDS(fitted_model_rl_plus, file.path('..', 'saved_objects',
-	str_c(format(Sys.time(), "%y%m%d"), '_rl_plus_param_recov.RDS')))
+	str_c(format(Sys.time(), "%y%m%d"), '_rl_plus_main_study.RDS')))
 
-notify_me('Param Recov')
+notify_me('RL Plus')
+
+rm(fitted_model_rl_plus)
+
+fitted_model_rl_simple <- stan(
+	file = file.path('models', 'single_alpha_rl.stan'),
+	data = stan_dat,
+	iter = 20000,
+	warmup = 2000,
+	chains = 4,
+	cores = 4)
+
+saveRDS(fitted_model_rl_simple, file.path('..', 'saved_objects',
+	str_c(format(Sys.time(), "%y%m%d"), '_rl_simple_main_study.RDS')))
+
+notify_me('RL Simple')

@@ -93,7 +93,6 @@ model{
       }
       // TODO: (5) Put the model loop into the transformed params. section?
       // Normal truncated by [0, 1]
-      belief[i_trial, i_subj] ~ normal(model_belief, sigma[i_subj]) T[0, 1];
       target += normal_lpdf(belief[i_trial, i_subj] |
         model_belief, sigma[i_subj]) -
         log_diff_exp(normal_lcdf(1 | model_belief, sigma[i_subj]),
@@ -103,30 +102,30 @@ model{
 }
 
 
-// generated quantities {
-//   // To "test" the differences:
-//   matrix[dat_len, n_subj] log_lik;  // For loo evalutation later
+generated quantities {
+  matrix[dat_len, n_subj] log_lik;  // For loo evalutation later
+  real model_belief;
 
-//   for (i_subj in 1:n_subj){
-//     real model_belief;  // The belief the model would hold
+  for (i_subj in 1:n_subj){
 
-//     for (i_trial in 1:dat_len) {
-//       if (round_in_block[i_trial, i_subj] == 0) {
-//         model_belief = .5;
-//       } else {
-//         model_belief = update_model_belief(
-//           model_belief,
-//           invested[i_trial, i_subj],
-//           gain_position[i_trial, i_subj],
-//           loss_position[i_trial, i_subj],
-//           favorable_move[i_trial, i_subj],
-//           alpha[i_subj],
-//           rl_beta[i_subj, :]);
-//       }
+    for (i_trial in 1:dat_len) {
+      if (round_in_block[i_trial, i_subj] == 0) {
+        model_belief = .5;
+      } else {
+        model_belief = update_model_belief(
+          model_belief,
+          invested[i_trial, i_subj],
+          gain_position[i_trial, i_subj],
+          loss_position[i_trial, i_subj],
+          favorable_move[i_trial, i_subj],
+          up_move[i_trial, i_subj],
+          alphas[i_subj, :]);
+      }
 
-//     log_lik[i_trial, i_subj] = normal_lpdf(belief[i_trial, i_subj] |
-//       model_belief, sigma[i_subj]);
-//     // TODO: (3) Does this have to be truncated? / Do I need it for beliefs?
-//     }
-//   }
-// }
+    log_lik[i_trial, i_subj] = normal_lpdf(belief[i_trial, i_subj] |
+        model_belief, sigma[i_subj]) -
+        log_diff_exp(normal_lcdf(1 | model_belief, sigma[i_subj]),
+                            normal_lcdf(0 | model_belief, sigma[i_subj]));
+    }
+  }
+}
