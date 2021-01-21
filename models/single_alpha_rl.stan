@@ -32,8 +32,6 @@ transformed parameters{
 }
 
 model{
-  // Priors following Fontanesi19
-
   // Hyperpriors
   hyper_alpha ~ normal(-.5, .5);
   hyper_alpha_sd ~ gamma(1.2, 3);
@@ -55,7 +53,6 @@ model{
         model_belief = model_belief + alpha[i_subj] *
           (up_move[i_trial, i_subj] - model_belief);
       }
-      // TODO: (5) Put the model loop into the transformed params. section?
       target += normal_lpdf(belief[i_trial, i_subj] |
         model_belief, sigma[i_subj]) -
         log_diff_exp(normal_lcdf(1 | model_belief, sigma[i_subj]),
@@ -66,9 +63,9 @@ model{
 
 generated quantities {
   matrix[dat_len, n_subj] log_lik;  // For loo evalutation later
-  real model_belief;
 
   for (i_subj in 1:n_subj){
+    real model_belief;
 
     for (i_trial in 1:dat_len) {
       if (round_in_block[i_trial, i_subj] == 0) {

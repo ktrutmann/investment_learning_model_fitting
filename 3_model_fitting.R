@@ -55,10 +55,19 @@ stan_dat$up_move[1, 1] <- 0
 fitted_model_rl_plus <- stan(
 	file = file.path('models', 'multi_alpha_rl.stan'),
 	data = stan_dat,
-	iter = 20000,
-	warmup = 2000,
+	iter = 21000,
+	warmup = 1000,
 	chains = 4,
-	cores = 4)
+	cores = 4,
+	save_warmup = FALSE,
+	refresh = 100,
+	pars = c('hyper_alphas',
+			 'hyper_alpha_sds',
+			 'hyper_sigma',
+			 'hyper_sigma_sd'),
+	sample_file = file.path('..', 'saved_objects',
+		str_c(format(Sys.time(), "%y%m%d"),
+			'_samples_rl_plus_main_study.csv')))
 
 saveRDS(fitted_model_rl_plus, file.path('..', 'saved_objects',
 	str_c(format(Sys.time(), "%y%m%d"), '_rl_plus_main_study.RDS')))
@@ -70,10 +79,19 @@ rm(fitted_model_rl_plus)
 fitted_model_rl_simple <- stan(
 	file = file.path('models', 'single_alpha_rl.stan'),
 	data = stan_dat,
-	iter = 20000,
-	warmup = 2000,
+	iter = 21000,
+	warmup = 1000,
 	chains = 4,
-	cores = 4)
+	cores = 4,
+	save_warmup = FALSE,
+	refresh = 100,
+	pars = c('hyper_alpha',
+			 'hyper_alpha_sd',
+			 'hyper_sigma',
+			 'hyper_sigma_sd'),
+	sample_file = file.path('..', 'saved_objects',
+		str_c(format(Sys.time(), "%y%m%d"),
+			'_samples_rl_simple_main_study.csv')))
 
 saveRDS(fitted_model_rl_simple, file.path('..', 'saved_objects',
 	str_c(format(Sys.time(), "%y%m%d"), '_rl_simple_main_study.RDS')))
