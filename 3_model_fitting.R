@@ -51,11 +51,15 @@ stan_dat <- list(
 
 stan_dat$up_move[1, 1] <- 0
 
+# saveRDS(stan_dat, file.path('..', 'data', 'saved_objects', 'stan_dat.RDS'))
+# stan_dat <- readRDS(file.path('..', 'data', 'saved_objects', 'stan_dat.RDS'))
+
+
 # Fitting ----------------------------------------------------
-fitted_model_rl_plus <- stan(
-	file = file.path('models', 'multi_alpha_rl.stan'),
+fitted_model_rl_inv <- stan(
+	file = file.path('models', 'multi_alpha_invested_rl.stan'),
 	data = stan_dat,
-	iter = 21000,
+	iter = 51000,
 	warmup = 1000,
 	chains = 4,
 	cores = 4,
@@ -67,33 +71,65 @@ fitted_model_rl_plus <- stan(
 			 'hyper_sigma_sd'),
 	sample_file = file.path('..', 'saved_objects',
 		str_c(format(Sys.time(), "%y%m%d"),
-			'_samples_rl_plus_main_study.csv')))
+			'_samples_rl_invested_main_study.csv')))
 
-saveRDS(fitted_model_rl_plus, file.path('..', 'saved_objects',
-	str_c(format(Sys.time(), "%y%m%d"), '_rl_plus_main_study.RDS')))
+saveRDS(fitted_model_rl_inv, file.path('..', 'saved_objects',
+	str_c(format(Sys.time(), "%y%m%d"), '_rl_invested_main_study.RDS')))
 
-notify_me('RL Plus')
+notify_me('RL Invested')
 
-rm(fitted_model_rl_plus)
+rm(fitted_model_rl_inv)
 
-fitted_model_rl_simple <- stan(
-	file = file.path('models', 'single_alpha_rl.stan'),
+
+#############################
+
+fitted_model_rl_returns <- stan(
+	file = file.path('models', 'multi_alpha_returns_rl.stan'),
 	data = stan_dat,
-	iter = 21000,
+	iter = 51000,
 	warmup = 1000,
 	chains = 4,
 	cores = 4,
 	save_warmup = FALSE,
 	refresh = 100,
-	pars = c('hyper_alpha',
-			 'hyper_alpha_sd',
+	pars = c('hyper_alphas',
+			 'hyper_alpha_sds',
 			 'hyper_sigma',
 			 'hyper_sigma_sd'),
 	sample_file = file.path('..', 'saved_objects',
 		str_c(format(Sys.time(), "%y%m%d"),
-			'_samples_rl_simple_main_study.csv')))
+			'_samples_rl_returns_main_study.csv')))
 
-saveRDS(fitted_model_rl_simple, file.path('..', 'saved_objects',
-	str_c(format(Sys.time(), "%y%m%d"), '_rl_simple_main_study.RDS')))
+saveRDS(fitted_model_rl_returns, file.path('..', 'saved_objects',
+	str_c(format(Sys.time(), "%y%m%d"), '_rl_returns_main_study.RDS')))
 
-notify_me('RL Simple')
+notify_me('RL Returns')
+
+rm(fitted_model_rl_returns)
+
+
+#############################
+
+fitted_model_rl_moves <- stan(
+	file = file.path('models', 'multi_alpha_moves_rl.stan'),
+	data = stan_dat,
+	iter = 51000,
+	warmup = 1000,
+	chains = 4,
+	cores = 4,
+	save_warmup = FALSE,
+	refresh = 100,
+	pars = c('hyper_alphas',
+			 'hyper_alpha_sds',
+			 'hyper_sigma',
+			 'hyper_sigma_sd'),
+	sample_file = file.path('..', 'saved_objects',
+		str_c(format(Sys.time(), "%y%m%d"),
+			'_samples_rl_moves_main_study.csv')))
+
+saveRDS(fitted_model_rl_moves, file.path('..', 'saved_objects',
+	str_c(format(Sys.time(), "%y%m%d"), '_rl_moves_main_study.RDS')))
+
+notify_me('RL Moves (All done now!)')
+
+rm(fitted_model_rl_moves)
