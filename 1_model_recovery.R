@@ -4,7 +4,7 @@ library(tidyverse)
 options(mc.cores = parallel::detectCores())
 Sys.setenv(LOCAL_CPPFLAGS = '-march=corei7 -mtune=corei7')
 
-dat_main_long <- read_delim(file.path('..', 'Data', 'Clean',
+dat_main_long <- read_delim(file.path('..', 'data', 'clean',
 	'all_participants_long_main_param_recov.csv'), delim = ';')
 
 # Helper functions -----------------------------------------------
@@ -57,7 +57,7 @@ stan_dat$favorable_move[c(1, 76), ] <- 0 # These aren't used in the model
 fitted_model_rl_inv <- stan(
 	file = file.path('models', 'multi_alpha_rl.stan'),
 	data = stan_dat,
-	iter = 101000,
+	iter = 21000,
 	warmup = 1000,
 	chains = 4,
 	cores = 4,
@@ -67,9 +67,9 @@ fitted_model_rl_inv <- stan(
 			 'hyper_alpha_sds',
 			 'hyper_sigma',
 			 'hyper_sigma_sd'),
-	sample_file = file.path('..', 'saved_objects',
+	sample_file = file.path('..', 'data', 'saved_objects',
 		str_c(format(Sys.time(), "%y%m%d"),
-			'_samples_rl_invested_main_study.csv')))
+			'_samples_rl_invested_param_recov.csv')))
 
-saveRDS(fitted_model_rl_inv, file.path('..', 'saved_objects',
-	str_c(format(Sys.time(), "%y%m%d"), '_rl_invested_main_study.RDS')))
+saveRDS(fitted_model_rl_inv, file.path('..', 'data', 'saved_objects',
+	str_c(format(Sys.time(), "%y%m%d"), '_rl_invested_param_recov.RDS')))
