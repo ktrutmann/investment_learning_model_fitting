@@ -69,7 +69,7 @@ fitted_model_rl_inv <- stan(
 			 'hyper_sigma_sd'),
 	sample_file = file.path('..', 'data', 'saved_objects',
 		str_c(format(Sys.time(), "%y%m%d"),
-			'_samples_rl_invested_param_recov.csv')))
+			'_samples_rl_plus_param_recov.csv')))
 
 saveRDS(fitted_model_rl_inv, file.path('..', 'data', 'saved_objects',
-	str_c(format(Sys.time(), "%y%m%d"), '_rl_invested_param_recov.RDS')))
+	str_c(format(Sys.time(), "%y%m%d"), '_rl_invested_plus_recov.RDS')))
