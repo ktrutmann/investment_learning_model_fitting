@@ -1,23 +1,24 @@
 functions{
-  real update_model_belief(real prev_belief, int invested, int gain_pos,
+  real update_model_belief(real prev_belief, int last_transaction, int gain_pos,
                       int loss_pos, int favorable_move, int up_move,
                       row_vector alphas) {
 
-    if ((gain_pos == 1) && (favorable_move == 1)) {
-      return prev_belief + alphas[2] * (up_move - prev_belief);
-
-    } else if ((gain_pos == 1) && (favorable_move == 0)) {
-      return prev_belief + alphas[3] * (up_move - prev_belief);
-
-    } else if ((loss_pos == 1) && (favorable_move == 1)) {
-      return prev_belief + alphas[4] * (up_move - prev_belief);
-
-    } else if ((loss_pos == 1) && (favorable_move == 0)) {
-      return prev_belief + alphas[5] * (up_move - prev_belief);
-
-    } else {
+    if (last_transaction != 0 || (gain_pos == 0 && loss_pos == 0)) {
       return prev_belief + alphas[1] * (up_move - prev_belief);
     }
+    if ((gain_pos == 1) && (favorable_move == 1)) {
+      return prev_belief + alphas[2] * (up_move - prev_belief);
+    }
+    if ((gain_pos == 1) && (favorable_move == 0)) {
+      return prev_belief + alphas[3] * (up_move - prev_belief);
+    }
+    if ((loss_pos == 1) && (favorable_move == 1)) {
+      return prev_belief + alphas[4] * (up_move - prev_belief);
+    }
+    if ((loss_pos == 1) && (favorable_move == 0)) {
+      return prev_belief + alphas[5] * (up_move - prev_belief);
+    }
+    return -999;  // If this happens, it should raise some red flags
   }
 }
 
@@ -27,7 +28,7 @@ data{
   int<lower=1> n_subj;  // How many participants are we fitting?
   int<lower=0, upper=75> round_in_block[dat_len, n_subj];
   matrix<lower=0, upper=1>[dat_len, n_subj] belief; // The reported beliefs
-  int<lower=0, upper=1> invested[dat_len, n_subj]; // Invest or short?
+  int<lower=-2, upper=2> last_transaction[dat_len, n_subj]; // Invest or short?
   int<lower=0, upper=1> gain_position[dat_len, n_subj];
   int<lower=0, upper=1> loss_position[dat_len, n_subj];
   int<lower=0, upper=1> up_move[dat_len, n_subj];
@@ -85,7 +86,7 @@ model{
 
         model_belief = update_model_belief(
           model_belief,
-          invested[i_trial, i_subj],
+          last_transaction[i_trial, i_subj],
           gain_position[i_trial, i_subj],
           loss_position[i_trial, i_subj],
           favorable_move[i_trial, i_subj],
@@ -114,7 +115,7 @@ generated quantities {
       } else {
         model_belief = update_model_belief(
           model_belief,
-          invested[i_trial, i_subj],
+          last_transaction[i_trial, i_subj],
           gain_position[i_trial, i_subj],
           loss_position[i_trial, i_subj],
           favorable_move[i_trial, i_subj],

@@ -27,7 +27,8 @@ make_stan_matrix <- function(df, content_var) {
 
 # Getting Data ready --------------------------------------------------------
 fit_dat <- dat_main_long %>%
-	mutate(hold_lead = lead(hold)) %>%
+	mutate(last_transaction = lag(transaction),
+		last_returns = lag(returns)) %>%
 	filter(i_block <= 1, i_round_in_block != 75)
 
 # Data for Stan (names must correspond to that in .stan file):
@@ -37,10 +38,9 @@ stan_dat <- list(
 	n_subj = length(unique(fit_dat$participant_code)),
 	round_in_block = make_stan_matrix(fit_dat, 'i_round_in_block'),
 	belief = make_stan_matrix(fit_dat, 'belief') / 100,
-	hold_lead = make_stan_matrix(fit_dat, 'hold_lead') + 2,
-	invested = (make_stan_matrix(fit_dat, 'hold') != 0) + 0,
-	gain_position = (make_stan_matrix(fit_dat, 'returns') > 0) + 0,
-	loss_position = (make_stan_matrix(fit_dat, 'returns') < 0) + 0,
+	last_transaction = make_stan_matrix(fit_dat, 'last_transaction'),
+	gain_position = (make_stan_matrix(fit_dat, 'last_returns') > 0) + 0,
+	loss_position = (make_stan_matrix(fit_dat, 'last_returns') < 0) + 0,
 	favorable_move = (make_stan_matrix(fit_dat,
 		'price_move_from_last_corrected') == 'Favorable') + 0,
 	up_move = (make_stan_matrix(fit_dat,
@@ -51,25 +51,26 @@ stan_dat <- list(
 
 stan_dat$up_move[1, 1] <- 0
 stan_dat$favorable_move[c(1, 76), ] <- 0 # These aren't used in the model
+stan_dat$last_transaction[c(1, 76), ] <- 0 # These aren't used in the model
+stan_dat$gain_position[c(1, 76), ] <- 0 # These aren't used in the model
+stan_dat$loss_position[c(1, 76), ] <- 0 # These aren't used in the model
 
 
 # Fitting ----------------------------------------------------
 fitted_model_rl_inv <- stan(
 	file = file.path('models', 'multi_alpha_rl.stan'),
 	data = stan_dat,
-	iter = 21000,
+	iter = 11000,
 	warmup = 1000,
 	chains = 4,
 	cores = 4,
 	save_warmup = FALSE,
-	refresh = 100,
+	refresh = 10,
 	pars = c('hyper_alphas',
-			 'hyper_alpha_sds',
-			 'hyper_sigma',
-			 'hyper_sigma_sd'),
+			 'alphas'),
 	sample_file = file.path('..', 'data', 'saved_objects',
-		str_c(format(Sys.time(), "%y%m%d"),
+		str_c(format(Sys.time(), '%y%m%d-%H00'),
 			'_samples_rl_plus_param_recov.csv')))
 
 saveRDS(fitted_model_rl_inv, file.path('..', 'data', 'saved_objects',
-	str_c(format(Sys.time(), "%y%m%d"), '_rl_invested_plus_recov.RDS')))
+	str_c(format(Sys.time(), '%y%m%d-%H00'), '_rl_plus_param_recov.RDS')))

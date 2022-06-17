@@ -5,8 +5,9 @@ source('notifier.R')
 options(mc.cores = parallel::detectCores())
 Sys.setenv(LOCAL_CPPFLAGS = '-march=corei7 -mtune=corei7')
 
-dat_main_long <- read_delim(file.path('..', 'data', 'clean',
-	'all_participants_long_main_main_study.csv'), delim = ';')
+dat_main_long <- read_delim(file.path('..', 'Data', 'Clean',
+	'all_participants_long_main_main_study.csv'), delim = ';',
+	guess_max = 5000)
 
 # Helper functions -----------------------------------------------
 
@@ -38,7 +39,7 @@ stan_dat <- list(
 	round_in_block = make_stan_matrix(fit_dat, 'i_round_in_block'),
 	belief = make_stan_matrix(fit_dat, 'belief') / 100,
 	hold_lead = make_stan_matrix(fit_dat, 'hold_lead') + 2,
-	invested = (make_stan_matrix(fit_dat, 'hold') != 0) + 0,
+	invested = (make_stan_matrix(fit_dat, 'hold') != 0) + 0,# TODO: (1) FIXME! (See changes in 1_model_recovery.R)
 	gain_position = (make_stan_matrix(fit_dat, 'returns') > 0) + 0,
 	loss_position = (make_stan_matrix(fit_dat, 'returns') < 0) + 0,
 	favorable_move = (make_stan_matrix(fit_dat,
