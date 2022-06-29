@@ -29,7 +29,15 @@ make_stan_matrix <- function(df, content_var) {
 fit_dat <- dat_main_long %>%
 	mutate(last_transaction = lag(transaction),
 		last_returns = lag(returns)) %>%
-	filter(i_block <= 1, i_round_in_block != 75)
+	filter(i_block <= 1, i_round_in_block != 75) %>%
+	mutate(updated_from_code = case_when(
+		is.na(updated_from) ~ 1,
+		updated_from == 'Not Invested' ~ 1,
+		updated_from == 'Favorable Gain' ~ 2,
+		updated_from == 'Unfavorable Gain' ~ 3,
+		updated_from == 'Favorable Loss' ~ 4,
+		updated_from == 'Unfavorable Loss' ~ 5
+	))
 
 # Data for Stan (names must correspond to that in .stan file):
 # Note: + 0 is used to convert the boolean to integer matrix
@@ -38,11 +46,7 @@ stan_dat <- list(
 	n_subj = length(unique(fit_dat$participant_code)),
 	round_in_block = make_stan_matrix(fit_dat, 'i_round_in_block'),
 	belief = make_stan_matrix(fit_dat, 'belief') / 100,
-	last_transaction = make_stan_matrix(fit_dat, 'last_transaction'),
-	gain_position = (make_stan_matrix(fit_dat, 'last_returns') > 0) + 0,
-	loss_position = (make_stan_matrix(fit_dat, 'last_returns') < 0) + 0,
-	favorable_move = (make_stan_matrix(fit_dat,
-		'price_move_from_last_corrected') == 'Favorable') + 0,
+	updating_from = make_stan_matrix(fit_dat, 'updated_from_code'),
 	up_move = (make_stan_matrix(fit_dat,
 		'price_diff_from_last') > 0) + 0,
 	current_price = (make_stan_matrix(fit_dat, 'price')),
@@ -50,22 +54,18 @@ stan_dat <- list(
 )
 
 stan_dat$up_move[1, 1] <- 0
-stan_dat$favorable_move[c(1, 76), ] <- 0 # These aren't used in the model
-stan_dat$last_transaction[c(1, 76), ] <- 0 # These aren't used in the model
-stan_dat$gain_position[c(1, 76), ] <- 0 # These aren't used in the model
-stan_dat$loss_position[c(1, 76), ] <- 0 # These aren't used in the model
 
 
 # Fitting ----------------------------------------------------
 fitted_model_rl_inv <- stan(
 	file = file.path('models', 'multi_alpha_rl.stan'),
 	data = stan_dat,
-	iter = 11000,
+	iter = 21000,
 	warmup = 1000,
 	chains = 4,
 	cores = 4,
 	save_warmup = FALSE,
-	refresh = 10,
+	refresh = 100,
 	pars = c('hyper_alphas',
 			 'alphas'),
 	sample_file = file.path('..', 'data', 'saved_objects',

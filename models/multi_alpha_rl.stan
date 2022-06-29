@@ -1,38 +1,11 @@
-functions{
-  real update_model_belief(real prev_belief, int last_transaction, int gain_pos,
-                      int loss_pos, int favorable_move, int up_move,
-                      row_vector alphas) {
-
-    if (last_transaction != 0 || (gain_pos == 0 && loss_pos == 0)) {
-      return prev_belief + alphas[1] * (up_move - prev_belief);
-    }
-    if ((gain_pos == 1) && (favorable_move == 1)) {
-      return prev_belief + alphas[2] * (up_move - prev_belief);
-    }
-    if ((gain_pos == 1) && (favorable_move == 0)) {
-      return prev_belief + alphas[3] * (up_move - prev_belief);
-    }
-    if ((loss_pos == 1) && (favorable_move == 1)) {
-      return prev_belief + alphas[4] * (up_move - prev_belief);
-    }
-    if ((loss_pos == 1) && (favorable_move == 0)) {
-      return prev_belief + alphas[5] * (up_move - prev_belief);
-    }
-    return -999;  // If this happens, it should raise some red flags
-  }
-}
-
-
 data{
   int<lower=1> dat_len;  // How many data points are there?
   int<lower=1> n_subj;  // How many participants are we fitting?
   int<lower=0, upper=75> round_in_block[dat_len, n_subj];
   matrix<lower=0, upper=1>[dat_len, n_subj] belief; // The reported beliefs
-  int<lower=-2, upper=2> last_transaction[dat_len, n_subj]; // Invest or short?
-  int<lower=0, upper=1> gain_position[dat_len, n_subj];
-  int<lower=0, upper=1> loss_position[dat_len, n_subj];
+  int<lower=1, upper=5> updating_from[dat_len, n_subj]; // Invest or short?
   int<lower=0, upper=1> up_move[dat_len, n_subj];
-  int<lower=0, upper=1> favorable_move[dat_len, n_subj];
+  // int<lower=0, upper=1> favorable_move[dat_len, n_subj];
 }
 
 
@@ -83,15 +56,9 @@ model{
       if (round_in_block[i_trial, i_subj] == 0) {
         model_belief = .5;
       } else {
-
-        model_belief = update_model_belief(
-          model_belief,
-          last_transaction[i_trial, i_subj],
-          gain_position[i_trial, i_subj],
-          loss_position[i_trial, i_subj],
-          favorable_move[i_trial, i_subj],
-          up_move[i_trial, i_subj],
-          alphas[i_subj, :]);
+        model_belief = model_belief +
+          alphas[i_subj, updating_from[i_trial, i_subj]] *
+          (up_move[i_trial, i_subj] - model_belief);
       }
       // Normal truncated by [0, 1]
       target += normal_lpdf(belief[i_trial, i_subj] |
@@ -113,14 +80,9 @@ generated quantities {
       if (round_in_block[i_trial, i_subj] == 0) {
         model_belief = .5;
       } else {
-        model_belief = update_model_belief(
-          model_belief,
-          last_transaction[i_trial, i_subj],
-          gain_position[i_trial, i_subj],
-          loss_position[i_trial, i_subj],
-          favorable_move[i_trial, i_subj],
-          up_move[i_trial, i_subj],
-          alphas[i_subj, :]);
+        model_belief = model_belief +
+          alphas[i_subj, updating_from[i_trial, i_subj]] *
+          (up_move[i_trial, i_subj] - model_belief);
       }
 
     log_lik[i_trial, i_subj] = normal_lpdf(belief[i_trial, i_subj] |
