@@ -2,7 +2,7 @@ library(rstan)
 library(tidyverse)
 
 options(mc.cores = parallel::detectCores())
-Sys.setenv(LOCAL_CPPFLAGS = '-march=corei7 -mtune=corei7')
+rstan_options(auto_write = TRUE)
 
 dat_main_long <- read_delim(file.path('..', 'data', 'clean',
 	'all_participants_long_main_param_recov.csv'), delim = ';')
@@ -57,20 +57,20 @@ stan_dat$up_move[1, 1] <- 0
 
 
 # Fitting ----------------------------------------------------
-fitted_model_rl_inv <- stan(
-	file = file.path('models', 'multi_alpha_rl.stan'),
+starttime <- format(Sys.time(), '%y%m%d-%H00')
+name_this_run <- 'rl_single_alpha_single_sigma'
+fitted_model_rl_plus <- stan(
+	file = file.path('models', 'single_alpha_rl_one_sigma.stan'),
 	data = stan_dat,
-	iter = 21000,
-	warmup = 1000,
+	iter = 10500,
+	warmup = 500,
 	chains = 4,
 	cores = 4,
 	save_warmup = FALSE,
 	refresh = 100,
-	pars = c('hyper_alphas',
-			 'alphas'),
 	sample_file = file.path('..', 'data', 'saved_objects',
-		str_c(format(Sys.time(), '%y%m%d-%H00'),
-			'_samples_rl_plus_param_recov.csv')))
+		str_c(starttime,
+			'_samples_', name_this_run, '.csv')))
 
-saveRDS(fitted_model_rl_inv, file.path('..', 'data', 'saved_objects',
-	str_c(format(Sys.time(), '%y%m%d-%H00'), '_rl_plus_param_recov.RDS')))
+saveRDS(fitted_model_rl_plus, file.path('..', 'data', 'saved_objects',
+	str_c(starttime, '_', name_this_run, '.RDS')))

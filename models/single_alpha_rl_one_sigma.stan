@@ -15,20 +15,15 @@ parameters{
   real <lower=0> hyper_alpha_sd; // Learning rate standard deviation
   real alpha_raw[n_subj]; // The individual learning rate
 
-  real<lower=0> hyper_sigma; // Hyperparameter for the reporting error
-  real<lower=0> hyper_sigma_sd; // Hyperparameter for the reporting error
-  real<lower=0> sigmas_raw[n_subj];  // "Reporting error variance" parameter
+  real<lower=0> sigma; //  reporting error
 }
 
 
 transformed parameters{
   real  alpha[n_subj];
-  real  sigma[n_subj];
   // Non-centered parameterisation
   for (i in 1:n_subj){
-    // TODO: (4) Can't this be vectorized?
     alpha[i] = Phi(hyper_alpha + hyper_alpha_sd * alpha_raw[i]);
-    sigma[i] = hyper_sigma + hyper_sigma_sd * sigmas_raw[i];
   }
 }
 
@@ -37,15 +32,13 @@ model{
   hyper_alpha ~ normal(-.5, .5);
   hyper_alpha_sd ~ gamma(1.2, 3);
 
-  hyper_sigma ~ gamma(1.2, 3);
-  hyper_sigma_sd ~ gamma(1.2, 3);
+  sigma ~ gamma(1.2, 3);
 
   for (i_subj in 1:n_subj){
     real model_belief;
 
     // individual priors
     alpha_raw[i_subj] ~ std_normal();
-    sigmas_raw[i_subj] ~ std_normal();
 
     for (i_trial in 1:dat_len) {
       if (round_in_block[i_trial, i_subj] == 0) {
@@ -55,9 +48,9 @@ model{
           (up_move[i_trial, i_subj] - model_belief);
       }
       target += normal_lpdf(belief[i_trial, i_subj] |
-        model_belief, sigma[i_subj]) -
-        log_diff_exp(normal_lcdf(1 | model_belief, sigma[i_subj]),
-                            normal_lcdf(0 | model_belief, sigma[i_subj]));
+        model_belief, sigma) -
+        log_diff_exp(normal_lcdf(1 | model_belief, sigma),
+                            normal_lcdf(0 | model_belief, sigma));
     }
   }
 }
@@ -77,9 +70,9 @@ model{
 //       }
 
 //     log_lik[i_trial, i_subj] = normal_lpdf(belief[i_trial, i_subj] |
-//         model_belief, sigma[i_subj]) -
-//         log_diff_exp(normal_lcdf(1 | model_belief, sigma[i_subj]),
-//                             normal_lcdf(0 | model_belief, sigma[i_subj]));
+//         model_belief, sigma) -
+//         log_diff_exp(normal_lcdf(1 | model_belief, sigma),
+//                             normal_lcdf(0 | model_belief, sigma));
 //     }
 //   }
 // }
