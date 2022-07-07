@@ -58,9 +58,9 @@ stan_dat$up_move[1, 1] <- 0
 
 # Fitting ----------------------------------------------------
 starttime <- format(Sys.time(), '%y%m%d-%H00')
-name_this_run <- 'rl_single_alpha_single_sigma'
+name_this_run <- 'rl_multi_alpha_non_hierarchical'
 fitted_model_rl_plus <- stan(
-	file = file.path('models', 'single_alpha_rl_one_sigma.stan'),
+	file = file.path('models', 'multi_alpha_rl_non_hierarchical.stan'),
 	data = stan_dat,
 	iter = 10500,
 	warmup = 500,

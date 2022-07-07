@@ -12,24 +12,14 @@ data{
 
 
 parameters{
-  vector [5] hyper_alphas; // learning rate hyperparameters
-  vector <lower=0> [5] hyper_alpha_sds; // Learning rate standard deviation
-  matrix [n_subj, 5] alphas_raw; // The individual learning rate
-
-  real<lower=0> hyper_sigma; // Hyperparameter for the reporting error
-  real<lower=0> hyper_sigma_sd; // Hyperparameter for the reporting error
-  vector<lower=0> [n_subj] sigmas_raw;  // "Reporting error variance" parameter
+  vector [5] alphas_raw; // learning rate parameters
+  real<lower=0> sigma; // reporting error
 }
 
 
 transformed parameters{
-  matrix [n_subj, 5] alphas;
-  vector [n_subj] sigma;
-  // Non-centered parameterisation
-  for (i in 1:5){
-    alphas[:, i] = Phi(hyper_alphas[i] + hyper_alpha_sds[i] * alphas_raw[:, i]);
-  }
-  sigma = hyper_sigma + hyper_sigma_sd * sigmas_raw;
+  vector [5] alphas;
+  alphas = Phi(alphas_raw);
 }
 
 model{
@@ -37,35 +27,27 @@ model{
   // Priors following Fontanesi19
   // Hyperpriors
   for (i in 1:5){
-    hyper_alphas[i] ~ normal(-.5, .5);
-    hyper_alpha_sds[i] ~ gamma(1.2, 3);
+    alphas_raw[i] ~ normal(-.5, .5);
   }
 
-  hyper_sigma ~ gamma(1.2, 3);
-  hyper_sigma_sd ~ gamma(1.2, 3);
-  
+  sigma ~ gamma(1.2, 3);
+
   for (i_subj in 1:n_subj){
     real model_belief;
     
-    // individual priors
-    for (i in 1:5){
-      alphas_raw[i_subj, :] ~ std_normal();
-    }
-    sigmas_raw[i_subj] ~ std_normal();
-
     for (i_trial in 1:dat_len) {
       if (round_in_block[i_trial, i_subj] == 0) {
         model_belief = .5;
       } else {
         model_belief = model_belief +
-          alphas[i_subj, updating_from[i_trial, i_subj]] *
+          alphas[updating_from[i_trial, i_subj]] *
           (up_move[i_trial, i_subj] - model_belief);
       }
       // Normal truncated by [0, 1]
       target += normal_lpdf(belief[i_trial, i_subj] |
-        model_belief, sigma[i_subj]) -
-        log_diff_exp(normal_lcdf(1 | model_belief, sigma[i_subj]),
-                            normal_lcdf(0 | model_belief, sigma[i_subj]));
+        model_belief, sigma) -
+        log_diff_exp(normal_lcdf(1 | model_belief, sigma),
+                            normal_lcdf(0 | model_belief, sigma));
     }
   }
 }
@@ -87,9 +69,9 @@ model{
 //       }
 
 //     log_lik[i_trial, i_subj] = normal_lpdf(belief[i_trial, i_subj] |
-//         model_belief, sigma[i_subj]) -
-//         log_diff_exp(normal_lcdf(1 | model_belief, sigma[i_subj]),
-//                             normal_lcdf(0 | model_belief, sigma[i_subj]));
+//         model_belief, sigma) -
+//         log_diff_exp(normal_lcdf(1 | model_belief, sigma),
+//                             normal_lcdf(0 | model_belief, sigma));
 //     }
 //   }
 // }
