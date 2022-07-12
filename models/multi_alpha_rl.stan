@@ -38,11 +38,11 @@ model{
   // Hyperpriors
   for (i in 1:5){
     hyper_alphas[i] ~ normal(-.5, .5);
-    hyper_alpha_sds[i] ~ gamma(1.2, 3);
+    hyper_alpha_sds[i] ~ gamma(5, 10);
   }
 
-  hyper_sigma ~ gamma(1.2, 3);
-  hyper_sigma_sd ~ gamma(1.2, 3);
+  hyper_sigma ~ gamma(5, 10);
+  hyper_sigma_sd ~ gamma(5, 10);
   
   for (i_subj in 1:n_subj){
     real model_belief;

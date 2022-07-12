@@ -58,16 +58,16 @@ stan_dat$up_move[1, 1] <- 0
 
 # Fitting ----------------------------------------------------
 starttime <- format(Sys.time(), '%y%m%d-%H00')
-name_this_run <- 'rl_multi_alpha_non_hierarchical'
+name_this_run <- 'param_recov'
 fitted_model_rl_plus <- stan(
-	file = file.path('models', 'multi_alpha_rl_non_hierarchical.stan'),
+	file = file.path('models', 'multi_alpha_rl.stan'),
 	data = stan_dat,
 	iter = 10500,
 	warmup = 500,
 	chains = 4,
 	cores = 4,
 	save_warmup = FALSE,
-	refresh = 100,
+	refresh = 250,
 	sample_file = file.path('..', 'data', 'saved_objects',
 		str_c(starttime,
 			'_samples_', name_this_run, '.csv')))

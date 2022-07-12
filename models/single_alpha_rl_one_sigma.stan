@@ -13,18 +13,16 @@ data{
 parameters{
   real hyper_alpha; // learning rate hyperparameters
   real <lower=0> hyper_alpha_sd; // Learning rate standard deviation
-  real alpha_raw[n_subj]; // The individual learning rate
+  vector [n_subj] alpha_raw; // The individual learning rate
 
   real<lower=0> sigma; //  reporting error
 }
 
 
 transformed parameters{
-  real  alpha[n_subj];
+  vector [n_subj] alpha;
   // Non-centered parameterisation
-  for (i in 1:n_subj){
-    alpha[i] = Phi(hyper_alpha + hyper_alpha_sd * alpha_raw[i]);
-  }
+  alpha = Phi(hyper_alpha + hyper_alpha_sd * alpha_raw);
 }
 
 model{

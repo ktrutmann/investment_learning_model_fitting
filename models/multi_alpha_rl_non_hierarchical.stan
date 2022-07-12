@@ -27,7 +27,7 @@ model{
   // Priors following Fontanesi19
   // Hyperpriors
   for (i in 1:5){
-    alphas_raw[i] ~ normal(-.5, .5);
+    alphas_raw[i] ~ normal(-.5, .5); // Can't I transform it here already?
   }
 
   sigma ~ gamma(1.2, 3);

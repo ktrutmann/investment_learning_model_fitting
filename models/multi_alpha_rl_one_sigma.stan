@@ -22,10 +22,12 @@ parameters{
 
 transformed parameters{
   matrix [n_subj, 5] alphas;
+  vector [5] hyper_alphas_transformed;
   // Non-centered parameterisation
   for (i in 1:5){
     alphas[:, i] = Phi(hyper_alphas[i] + hyper_alpha_sds[i] * alphas_raw[:, i]);
   }
+  hyper_alphas_transformed = Phi(hyper_alphas);
 }
 
 model{
