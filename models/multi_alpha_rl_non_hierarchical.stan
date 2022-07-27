@@ -13,7 +13,7 @@ data{
 
 parameters{
   vector [5] alphas_raw; // learning rate parameters
-  real<lower=0> sigma; // reporting error
+  real<lower=0.02> sigma; // reporting error
 }
 
 
