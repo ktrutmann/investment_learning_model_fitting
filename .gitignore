@@ -6,3 +6,4 @@
 /models/dimitris_model.stan
 /models/laura_model.stan
 /models/*.rds
+/output/

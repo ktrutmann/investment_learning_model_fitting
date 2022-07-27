@@ -27,8 +27,6 @@ make_stan_matrix <- function(df, content_var) {
 
 # Getting Data ready --------------------------------------------------------
 fit_dat <- dat_main_long %>%
-	mutate(last_transaction = lag(transaction),
-		last_returns = lag(returns)) %>%
 	filter(i_block <= 1, i_round_in_block != 75) %>%
 	mutate(updated_from_code = case_when(
 		is.na(updated_from) ~ 1,
@@ -62,15 +60,12 @@ name_this_run <- 'param_recov'
 fitted_model_rl_plus <- stan(
 	file = file.path('models', 'multi_alpha_rl.stan'),
 	data = stan_dat,
-	iter = 10500,
+	iter = 5500,
 	warmup = 500,
 	chains = 4,
 	cores = 4,
 	save_warmup = FALSE,
-	refresh = 250,
-	sample_file = file.path('..', 'data', 'saved_objects',
-		str_c(starttime,
-			'_samples_', name_this_run, '.csv')))
+	refresh = 250)
 
 saveRDS(fitted_model_rl_plus, file.path('..', 'data', 'saved_objects',
 	str_c(starttime, '_', name_this_run, '.RDS')))
