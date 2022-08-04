@@ -57,7 +57,7 @@ stan_dat$up_move[1, 1] <- 0
 
 # Fitting ----------------------------------------------------
 starttime <- format(Sys.time(), '%y%m%d-%H00')
-name_this_run <- 'only_subj_111'
+name_this_run <- 'multi_alpha_main'
 fitted_model <- stan(
 	file = file.path('models', 'multi_alpha_rl.stan'),
 	data = stan_dat,
