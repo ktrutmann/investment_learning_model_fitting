@@ -44,6 +44,9 @@ transformed parameters{
     alphas[:, i] = Phi(hyper_alphas[i] + hyper_alpha_sds[i] * alphas_raw[:, i]);
   }
   sigma = hyper_sigma + hyper_sigma_sd * sigmas_raw;
+  for (i in 1:n_subj) {
+    sigma[i] = max([.02, sigma[i]]');
+  }
 }
 
 model{
@@ -55,9 +58,9 @@ model{
     hyper_alpha_sds[i] ~ gamma(1.2, 3);
   }
 
-  hyper_sigma ~ gamma(1.2, 3);
-  hyper_sigma_sd ~ gamma(1.2, 3);
-
+  hyper_sigma ~ gamma(5, 10);
+  hyper_sigma_sd ~ gamma(5, 10);
+  sigmas_raw ~ std_normal();
   
   for (i_subj in 1:n_subj){
     real model_belief;
@@ -66,7 +69,6 @@ model{
     for (i in 1:2){
       alphas_raw[i_subj, :] ~ std_normal();
     }
-    sigmas_raw[i_subj] ~ std_normal();
 
     for (i_trial in 1:dat_len) {
       if (round_in_block[i_trial, i_subj] == 0) {

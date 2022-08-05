@@ -15,27 +15,29 @@ parameters{
   real<lower=0> hyper_scaling_param_sd; // Scaling factor sd
   vector<lower=0> [n_subj] scaling_param_raw;  // Individual Scaling factor
 
-  real<lower=0> hyper_sigma_shape; // Hyperparameter for the reporting error shape
-  real<lower=0> hyper_sigma_rate; // Hyperparameter for the reporting error rate
-  // TODO: (1) Check whether the restriction of .02 is necessary here as well!
-  vector<lower=0> [n_subj] sigma;  // "Reporting error variance" parameter
+  real<lower=0> hyper_sigma; // Hyperparameter for the reporting error
+  real<lower=0> hyper_sigma_sd; // Hyperparameter for the reporting error
+  vector<lower=0> [n_subj] sigmas_raw;  // "Reporting error variance" parameter
 }
 
 transformed parameters{
   vector<lower=0> [n_subj] scaling_param;
+  vector<lower=.02> [n_subj] sigma;
+
   scaling_param = hyper_scaling_param + hyper_scaling_param_sd * scaling_param_raw;
+
+  sigma = hyper_sigma + hyper_sigma_sd * sigmas_raw;
+  for (i in 1:n_subj) {
+    sigma[i] = max([.02, sigma[i]]');
+  }
 }
 
 model{
   // Priors
-  hyper_scaling_param ~ gamma(10, 5);
-  hyper_scaling_param_sd ~ gamma(10, 5);
+  hyper_sigma ~ gamma(5, 10);
+  hyper_sigma_sd ~ gamma(5, 10);
+  sigmas_raw ~ std_normal();
   scaling_param_raw ~ std_normal();
-
-  hyper_sigma_shape ~ normal(30, 10);
-  hyper_sigma_rate ~ normal(80, 20);
-  sigma ~ gamma(hyper_sigma_shape, hyper_sigma_rate);
-
 
   for (i_subj in 1:n_subj) {
     target += normal_lpdf(belief[:, i_subj] |
