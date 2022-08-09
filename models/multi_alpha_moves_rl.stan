@@ -1,29 +1,10 @@
-functions{
-  real update_model_belief(real prev_belief, int invested, int gain_pos,
-                      int loss_pos, int favorable_move, int up_move,
-                      row_vector alphas) {
-
-    if (invested == 1 && favorable_move == 1) {
-      return prev_belief + alphas[2] * (up_move - prev_belief);
-    } if (invested == 1 && favorable_move == 0) {
-      return prev_belief + alphas[3] * (up_move - prev_belief);
-    } else {
-      return prev_belief + alphas[1] * (up_move - prev_belief);
-    }
-  }
-}
-
-
 data{
   int<lower=1> dat_len;  // How many data points are there?
   int<lower=1> n_subj;  // How many participants are we fitting?
   int<lower=0, upper=75> round_in_block[dat_len, n_subj];
   matrix<lower=0, upper=1>[dat_len, n_subj] belief; // The reported beliefs
-  int<lower=0, upper=1> invested[dat_len, n_subj]; // Invest or short?
-  int<lower=0, upper=1> gain_position[dat_len, n_subj];
-  int<lower=0, upper=1> loss_position[dat_len, n_subj];
+  int<lower=1, upper=5> updating_from[dat_len, n_subj]; // Coded context
   int<lower=0, upper=1> up_move[dat_len, n_subj];
-  int<lower=0, upper=1> favorable_move[dat_len, n_subj];
 }
 
 
@@ -77,16 +58,21 @@ model{
       if (round_in_block[i_trial, i_subj] == 0) {
         model_belief = .5;
       } else {
-
-        model_belief = update_model_belief(
-          model_belief,
-          invested[i_trial, i_subj],
-          gain_position[i_trial, i_subj],
-          loss_position[i_trial, i_subj],
-          favorable_move[i_trial, i_subj],
-          up_move[i_trial, i_subj],
-          alphas[i_subj, :]);
+        // Updating model beliefs:
+        if (updating_from[i_trial, i_subj] == 2 ||
+            updating_from[i_trial, i_subj] == 4) {
+          model_belief = model_belief + alphas[i_subj, 2] *
+            (up_move[i_trial, i_subj] - model_belief);
+        } if (updating_from[i_trial, i_subj] == 3 ||
+            updating_from[i_trial, i_subj] == 5) {
+          model_belief = model_belief + alphas[i_subj, 3] *
+            (up_move[i_trial, i_subj] - model_belief);
+        } else {
+          model_belief = model_belief + alphas[i_subj, 1] *
+            (up_move[i_trial, i_subj] - model_belief);
+        }
       }
+
       // Normal truncated by [0, 1]
       target += normal_lpdf(belief[i_trial, i_subj] |
         model_belief, sigma[i_subj]) -
