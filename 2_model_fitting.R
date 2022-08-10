@@ -28,7 +28,8 @@ make_stan_matrix <- function(df, content_var) {
 
 # Getting Data ready --------------------------------------------------------
 fit_dat <- dat_main_long %>%
-	filter(i_block <= 1, i_round_in_block != 75) %>%
+	filter(i_block <= 1, i_round_in_block != 75,
+	       participant_code != unique(participant_code)[111]) %>%
 	mutate(updated_from_code = case_when(
 		is.na(updated_from) ~ 1,
 		updated_from == 'Not Invested' ~ 1,
@@ -57,12 +58,12 @@ stan_dat$up_move[1, 1] <- 0
 
 # Fitting ----------------------------------------------------
 starttime <- format(Sys.time(), '%y%m%d-%H00')
-name_this_run <- 'multi_alpha_main'
+name_this_run <- 'full_CSRLM'
 fitted_model <- stan(
 	file = file.path('models', 'multi_alpha_rl.stan'),
 	data = stan_dat,
-	iter = 5300,
-	warmup = 300,
+	iter = 20500,
+	warmup = 500,
 	chains = 4,
 	cores = 4,
 	save_warmup = FALSE,

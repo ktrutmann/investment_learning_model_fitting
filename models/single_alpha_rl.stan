@@ -31,9 +31,6 @@ transformed parameters{
   // Non-centered parameterisation
   alpha = Phi(hyper_alpha + hyper_alpha_sd * alpha_raw);
   sigma = hyper_sigma + hyper_sigma_sd * sigmas_raw;
-  for (i in 1:n_subj) {
-    sigma[i] = max([.02, sigma[i]]');
-  }
   // sigma_prior = hyper_sigma_prior + hyper_sigma_sd_prior * sigma_prior_raw;
 }
 

@@ -22,14 +22,11 @@ parameters{
 
 transformed parameters{
   vector<lower=0> [n_subj] scaling_param;
-  vector<lower=.02> [n_subj] sigma;
+  vector<lower=0> [n_subj] sigma;
 
   scaling_param = hyper_scaling_param + hyper_scaling_param_sd * scaling_param_raw;
 
   sigma = hyper_sigma + hyper_sigma_sd * sigmas_raw;
-  for (i in 1:n_subj) {
-    sigma[i] = max([.02, sigma[i]]');
-  }
 }
 
 model{

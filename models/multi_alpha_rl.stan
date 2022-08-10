@@ -24,17 +24,12 @@ parameters{
 
 transformed parameters{
   matrix [n_subj, 5] alphas;
-  vector<lower=.02> [n_subj] sigma;
+  vector<lower=0> [n_subj] sigma;
   // Non-centered parameterisation
   for (i in 1:5){
     alphas[:, i] = Phi(hyper_alphas[i] + hyper_alpha_sds[i] * alphas_raw[:, i]);
   }
   sigma = hyper_sigma + hyper_sigma_sd * sigmas_raw;
-  // Participant 111 causes divergent transitions if sigmas < .02 are allowed.
-  // Since it is only this sinlge person I limit sigma at this value.
-  for (i in 1:n_subj) {
-    sigma[i] = max([.02, sigma[i]]');
-  }
 }
 
 model{
@@ -98,3 +93,4 @@ model{
 //     }
 //   }
 // }
+
