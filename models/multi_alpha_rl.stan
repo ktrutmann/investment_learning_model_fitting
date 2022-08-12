@@ -39,8 +39,8 @@ model{
     hyper_alpha_sds[i] ~ gamma(5, 10);
   }
 
-  hyper_sigma_shape ~ normal(30, 10) T[0, ];
-  hyper_sigma_rate ~ normal(80, 20) T[0, ];
+  hyper_sigma_shape ~ gamma(10, .3);
+  hyper_sigma_rate ~ gamma(15, .2);
   
   for (i_subj in 1:n_subj){
     real model_belief;
