@@ -13,20 +13,22 @@ parameters{
   vector <lower=0> [3] hyper_alpha_sds; // Learning rate standard deviation
   matrix [n_subj, 3] alphas_raw; // The individual learning rate
 
-  real<lower=0> hyper_sigma; // Hyperparameter for the reporting error
-  real<lower=0> hyper_sigma_sd; // Hyperparameter for the reporting error
-  vector<lower=0> [n_subj] sigmas_raw;  // "Reporting error variance" parameter
+  real<lower=0> hyper_sigma_shape; // Hyperparameter for the reporting error shape
+  real<lower=0> hyper_sigma_rate; // Hyperparameter for the reporting error rate
+  vector<lower=0> [n_subj] sigma_raw;  // "Reporting error variance" parameter
 }
 
 
 transformed parameters{
   matrix [n_subj, 3] alphas;
-  vector<lower=0> [n_subj] sigma;
+  vector<lower=0.02> [n_subj] sigma;
   // Non-centered parameterisation
   for (i in 1:3){
     alphas[:, i] = Phi(hyper_alphas[i] + hyper_alpha_sds[i] * alphas_raw[:, i]);
   }
-  sigma = hyper_sigma + hyper_sigma_sd * sigmas_raw;
+  // Truncating sigma at .02 because otherwise subj 111 doesn't converge!
+  // This seems to be slightly faster than truncating the parameter directly.
+  sigma = sigma_raw + .02;
 }
 
 model{
@@ -38,9 +40,8 @@ model{
     hyper_alpha_sds[i] ~ gamma(1.2, 3);
   }
 
-  hyper_sigma ~ gamma(5, 10);
-  hyper_sigma_sd ~ gamma(5, 10);
-
+  hyper_sigma_shape ~ gamma(10, .3);
+  hyper_sigma_rate ~ gamma(15, .2);
   
   for (i_subj in 1:n_subj){
     real model_belief;
@@ -49,7 +50,7 @@ model{
     for (i in 1:3){
       alphas_raw[i_subj, :] ~ std_normal();
     }
-    sigmas_raw[i_subj] ~ std_normal();
+    sigma_raw[i_subj] ~ gamma(hyper_sigma_shape, hyper_sigma_rate);
 
     for (i_trial in 1:dat_len) {
       if (round_in_block[i_trial, i_subj] == 0) {

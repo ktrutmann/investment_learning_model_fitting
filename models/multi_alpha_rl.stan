@@ -18,20 +18,23 @@ parameters{
 
   real<lower=0> hyper_sigma_shape; // Hyperparameter for the reporting error shape
   real<lower=0> hyper_sigma_rate; // Hyperparameter for the reporting error rate
-  vector<lower=.02> [n_subj] sigma;  // "Reporting error variance" parameter
+  vector<lower=0> [n_subj] sigma_raw;  // "Reporting error variance" parameter
 }
 
 
 transformed parameters{
   matrix<lower=0, upper=1> [n_subj, 5] alphas;
+  vector<lower=.02> [n_subj] sigma;
   // Non-centered parameterisation
   for (i in 1:5){
     alphas[:, i] = Phi(hyper_alphas[i] + hyper_alpha_sds[i] * alphas_raw[:, i]);
   }
+  // Truncating sigma at .02 because otherwise subj 111 doesn't converge!
+  // This seems to be slightly faster than truncating the parameter directly.
+  sigma = sigma_raw + .02;
 }
 
 model{
-
   // Priors following Fontanesi19
   // Hyperpriors
   for (i in 1:5){
@@ -49,8 +52,7 @@ model{
     for (i in 1:5){
       alphas_raw[i_subj, :] ~ std_normal();
     }
-    // Truncating sigma at .02 because otherwise subj 111 doesn't converge!
-    sigma[i_subj] ~ gamma(hyper_sigma_shape, hyper_sigma_rate) T[.02, ];
+    sigma_raw[i_subj] ~ gamma(hyper_sigma_shape, hyper_sigma_rate);
 
     for (i_trial in 1:dat_len) {
       if (round_in_block[i_trial, i_subj] == 0) {

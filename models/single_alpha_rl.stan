@@ -15,23 +15,20 @@ parameters{
   real <lower=0> hyper_alpha_sd; // Learning rate standard deviation
   vector [n_subj] alpha_raw; // The individual learning rate
 
-  real<lower=0> hyper_sigma; // Hyperparameter for the reporting error
-  real<lower=0> hyper_sigma_sd; // Hyperparameter for the reporting error
-  // real<lower=0> hyper_sigma_prior; // Hyperparameter for the reporting error
-  // real<lower=0> hyper_sigma_sd_prior; // Hyperparameter for the reporting error
-  vector <lower=0> [n_subj] sigmas_raw;  // "Reporting error variance" parameter
-  // real<lower=0> sigma_prior_raw;
+  real<lower=0> hyper_sigma_shape; // Hyperparameter for the reporting error shape
+  real<lower=0> hyper_sigma_rate; // Hyperparameter for the reporting error rate
+  vector<lower=0> [n_subj] sigma_raw;  // "Reporting error variance" parameter
 }
 
 
 transformed parameters{
   vector [n_subj] alpha;
-  vector <lower=0> [n_subj] sigma;
-  // real <lower=0> sigma_prior;
+  vector <lower=.02> [n_subj] sigma;
   // Non-centered parameterisation
   alpha = Phi(hyper_alpha + hyper_alpha_sd * alpha_raw);
-  sigma = hyper_sigma + hyper_sigma_sd * sigmas_raw;
-  // sigma_prior = hyper_sigma_prior + hyper_sigma_sd_prior * sigma_prior_raw;
+  // Truncating sigma at .02 because otherwise subj 111 doesn't converge!
+  // This seems to be slightly faster than truncating the parameter directly.
+  sigma = sigma_raw + .02;
 }
 
 model{
@@ -39,18 +36,15 @@ model{
   hyper_alpha ~ normal(-.5, .5);
   hyper_alpha_sd ~ gamma(5, 10);
 
-  hyper_sigma ~ gamma(5, 10);
-  hyper_sigma_sd ~ gamma(5, 10);
-  // hyper_sigma_prior ~ gamma(5, 10);
-  // hyper_sigma_sd_prior ~ gamma(5, 10);
+  hyper_sigma_shape ~ gamma(10, .3);
+  hyper_sigma_rate ~ gamma(15, .2);
 
   for (i_subj in 1:n_subj){
     real model_belief;
 
     // individual priors
     alpha_raw[i_subj] ~ std_normal();
-    sigmas_raw[i_subj] ~ std_normal();
-    // sigma_prior_raw ~ std_normal();
+    sigma_raw[i_subj] ~ gamma(hyper_sigma_shape, hyper_sigma_rate);
 
     for (i_trial in 1:dat_len) {
       if (round_in_block[i_trial, i_subj] == 0) {
