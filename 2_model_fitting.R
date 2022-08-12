@@ -8,6 +8,7 @@ dat_main_long <- read_delim(file.path('..', 'data', 'clean',
 	'all_participants_long_main_study.csv'), delim = ';',
 	guess_max = 5000)
 
+
 # Helper functions -----------------------------------------------
 
 #' This creates a matrix with one row per period and one column per subject.
@@ -25,6 +26,7 @@ make_stan_matrix <- function(df, content_var) {
 		as.matrix()
 	return(stan_mat)
 }
+
 
 # Getting Data ready --------------------------------------------------------
 fit_dat <- dat_main_long %>%

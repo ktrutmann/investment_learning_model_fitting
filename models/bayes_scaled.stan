@@ -20,6 +20,7 @@ parameters{
   vector<lower=0> [n_subj] sigma_raw;  // "Reporting error variance" parameter
 }
 
+
 transformed parameters{
   vector<lower=0> [n_subj] scaling_param;
   vector<lower=.02> [n_subj] sigma;
@@ -30,28 +31,17 @@ transformed parameters{
   sigma = sigma_raw + .02;
 }
 
+
 model{
   // Priors
-  scaling_param_raw ~ std_normal();
-  hyper_sigma_shape ~ gamma(10, .3);
-  hyper_sigma_rate ~ gamma(15, .2);
+  target += std_normal_lpdf(scaling_param_raw);
+  target += gamma_lpdf(hyper_sigma_shape | 10, .3);
+  target += gamma_lpdf(hyper_sigma_rate | 15, .2);
 
   for (i_subj in 1:n_subj) {
-    sigma_raw[i_subj] ~ gamma(hyper_sigma_shape, hyper_sigma_rate);
+    target += gamma_lpdf(sigma_raw[i_subj] | hyper_sigma_shape, hyper_sigma_rate);
 
     target += normal_lpdf(belief[:, i_subj] |
       (bayes_probs[:, i_subj] - .5) * scaling_param[i_subj] + .5, sigma[i_subj]);
   }
 }
-
-
-// generated quantities {
-//   matrix[dat_len, n_subj] log_lik;  // For loo evalutation later
-
-//   for (i_subj in 1:n_subj){
-//     for (i_trial in 1:dat_len) {
-//       log_lik[i_trial, i_subj] = normal_lpdf(belief[i_trial, i_subj] |
-//         bayes_probs[i_trial, i_subj], sigma[i_subj]);
-//     }
-//   }
-// }
