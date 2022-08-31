@@ -37,7 +37,7 @@ model{
   // Priors following Fontanesi19
   // Hyperpriors
   for (i in 1:2){
-    target += normal_lpdf(hyper_alphas[i] | -.5, .5);
+    target += normal_lpdf(hyper_alphas[i] | -.5, .3);
     target += gamma_lpdf(hyper_alpha_sds[i] | 1.2, 3);
   }
 
