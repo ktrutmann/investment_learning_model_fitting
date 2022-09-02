@@ -7,3 +7,5 @@
 /models/laura_model.stan
 /models/*.rds
 /output/
+*.ods
+*.ods#
