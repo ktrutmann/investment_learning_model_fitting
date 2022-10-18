@@ -24,8 +24,8 @@ transformed parameters{
 model{
 
   // Priors following Fontanesi19
-  alpha_raw ~ normal(-.5, .5);
-  sigma ~ gamma(1.2, 3);
+  target += normal_lpdf(alpha_raw | -.5, .5);
+  target += gamma_lpdf(sigma | 1.2, 3);
 
   for (i_subj in 1:n_subj){
     real model_belief;
@@ -45,3 +45,4 @@ model{
     }
   }
 }
+
